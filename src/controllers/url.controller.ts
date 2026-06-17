@@ -2,7 +2,6 @@ import { Request, Response } from 'express';
 import { createShortUrl , getLongUrl} from '../services/url.service';
 
 export async function shortenUrl(req: Request, res: Response) {
-  console.log('REQUEST RECEIVED', req.body);
   const { longUrl } = req.body;
 
   if (!longUrl) {

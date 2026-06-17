@@ -15,19 +15,15 @@ export function encodeBase62(num: number): string {
 
 
 export async function createShortUrl(longUrl: string): Promise<string> {
-  const result = await pool.query(
-    'INSERT INTO urls (short_code, long_url) VALUES ($1, $2) RETURNING id',
-    ['temp', longUrl]
-  );
-  
-  const id = result.rows[0].id;
+  const nextValResult = await pool.query("SELECT nextval('urls_id_seq') AS id");
+  const id = parseInt(nextValResult.rows[0].id, 10);
   const shortCode = encodeBase62(id);
-  
+
   await pool.query(
-    'UPDATE urls SET short_code = $1 WHERE id = $2',
-    [shortCode, id]
+    'INSERT INTO urls (id, short_code, long_url) VALUES ($1, $2, $3)',
+    [id, shortCode, longUrl]
   );
-  
+
   return shortCode;
 }
 
