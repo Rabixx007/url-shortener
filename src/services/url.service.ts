@@ -59,3 +59,20 @@
     [shortCode]
   );
 }
+export async function getUserUrls(userId: number) {
+  const result = await pool.query(
+    'SELECT short_code, long_url, click_count, created_at FROM urls WHERE user_id = $1 ORDER BY created_at DESC',
+    [userId]
+  );
+  return result.rows;
+}
+
+export async function deleteUrl(shortCode: string, userId: number): Promise<boolean> {
+  const result = await pool.query(
+    'DELETE FROM urls WHERE short_code = $1 AND user_id = $2',
+    [shortCode, userId]
+  );
+  // Also remove from Redis cache
+  await redisClient.del(shortCode);
+  return result.rowCount! > 0;
+}
