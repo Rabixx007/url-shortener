@@ -25,5 +25,9 @@ const start = async () => {
     console.log(`Server running on port ${PORT}`);
   });
 };
+app.use((err: Error, req: express.Request, res: express.Response, next: express.NextFunction) => {
+  console.error('Unhandled error:', err.message);
+  res.status(500).json({ error: 'Internal server error' });
+});
 
 start();
