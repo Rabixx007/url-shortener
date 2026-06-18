@@ -1,28 +1,31 @@
 import { Request, Response } from 'express';
 import { createShortUrl, getLongUrl, incrementClickCount } from '../services/url.service';
+import { AuthRequest } from '../middleware/auth';
+
 import validator from 'validator';
 
-export async function shortenUrl(req: Request, res: Response) {
+export async function shortenUrl(req: AuthRequest, res: Response) {
   const { longUrl } = req.body;
+  const userId = req.userId!;
 
   if (!longUrl) {
-  res.status(400).json({ error: 'longUrl is required' });
-  return;
-}
+    res.status(400).json({ error: 'longUrl is required' });
+    return;
+  }
+ if (!validator.isURL(longUrl, { require_protocol: true })) {
+    res.status(400).json({ error: 'Invalid URL. Must include http:// or https://' });
+    return;
+  }
 
-if (!validator.isURL(longUrl, { require_protocol: true })) {
-  res.status(400).json({ error: 'Invalid URL. Must include http:// or https://' });
-  return;
-}
   try {
-    const shortCode = await createShortUrl(longUrl);
+    const shortCode = await createShortUrl(longUrl, userId);
     res.status(201).json({
       shortUrl: `http://localhost:3000/${shortCode}`
     });
-  }  catch (err) {
-  console.error('FULL ERROR:', JSON.stringify(err, Object.getOwnPropertyNames(err)));
-  res.status(500).json({ error: 'Internal server error' });
-}
+  } catch (err) {
+    console.error('FULL ERROR:', JSON.stringify(err, Object.getOwnPropertyNames(err)));
+    res.status(500).json({ error: 'Internal server error' });
+  }
 }
 
 // export async function redirectUrl(req: Request, res: Response) {

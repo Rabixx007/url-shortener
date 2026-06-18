@@ -14,19 +14,18 @@
   }
 
 
-  export async function createShortUrl(longUrl: string): Promise<string> {
-    const nextValResult = await pool.query("SELECT nextval('urls_id_seq') AS id");
-    const id = parseInt(nextValResult.rows[0].id, 10);
-    const shortCode = encodeBase62(id);
+ export async function createShortUrl(longUrl: string, userId: number): Promise<string> {
+  const nextValResult = await pool.query("SELECT nextval('urls_id_seq') AS id");
+  const id = parseInt(nextValResult.rows[0].id, 10);
+  const shortCode = encodeBase62(id);
 
-    await pool.query(
-      'INSERT INTO urls (id, short_code, long_url) VALUES ($1, $2, $3)',
-      [id, shortCode, longUrl]
-    );
+  await pool.query(
+    'INSERT INTO urls (id, short_code, long_url, user_id) VALUES ($1, $2, $3, $4)',
+    [id, shortCode, longUrl, userId]
+  );
 
-    return shortCode;
-  }
-
+  return shortCode;
+}
   export async function getLongUrl(shortCode: string): Promise<string | null> {
     // Check Redis first
     const cached = await redisClient.get(shortCode);

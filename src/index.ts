@@ -3,6 +3,8 @@ import dotenv from 'dotenv';
 import { connectRedis } from './config/redis';
 import apiRoutes from './routes/api.routes';
 import redirectRoutes from './routes/redirect.routes';
+import authRoutes from './routes/auth.routes';
+
 
 dotenv.config();
 
@@ -11,6 +13,8 @@ app.use(express.json());
 
 app.use('/api', apiRoutes);
 app.use('/', redirectRoutes);
+app.use('/api/auth', authRoutes);
+
 
 
 app.get('/health', (req, res) => {
@@ -29,5 +33,6 @@ app.use((err: Error, req: express.Request, res: express.Response, next: express.
   console.error('Unhandled error:', err.message);
   res.status(500).json({ error: 'Internal server error' });
 });
+
 
 start();
