@@ -1,14 +1,19 @@
 import { Request, Response } from 'express';
-import { createShortUrl , getLongUrl} from '../services/url.service';
+import { createShortUrl, getLongUrl, incrementClickCount } from '../services/url.service';
+import validator from 'validator';
 
 export async function shortenUrl(req: Request, res: Response) {
   const { longUrl } = req.body;
 
   if (!longUrl) {
-    res.status(400).json({ error: 'longUrl is required' });
-    return;
-  }
+  res.status(400).json({ error: 'longUrl is required' });
+  return;
+}
 
+if (!validator.isURL(longUrl, { require_protocol: true })) {
+  res.status(400).json({ error: 'Invalid URL. Must include http:// or https://' });
+  return;
+}
   try {
     const shortCode = await createShortUrl(longUrl);
     res.status(201).json({
@@ -20,8 +25,24 @@ export async function shortenUrl(req: Request, res: Response) {
 }
 }
 
+// export async function redirectUrl(req: Request, res: Response) {
+// const { code } = req.params as { code: string };
+//   try {
+//     const longUrl = await getLongUrl(code);
+
+//     if (!longUrl) {
+//       res.status(404).json({ error: 'Short URL not found' });
+//       return;
+//     }
+
+//     res.redirect(302, longUrl);
+//   } catch (err) {
+//     console.error('REDIRECT ERROR:', JSON.stringify(err, Object.getOwnPropertyNames(err)));
+//     res.status(500).json({ error: 'Internal server error' });
+//   }
+// }
 export async function redirectUrl(req: Request, res: Response) {
-const { code } = req.params as { code: string };
+  const { code } = req.params as { code: string };
   try {
     const longUrl = await getLongUrl(code);
 
@@ -30,6 +51,7 @@ const { code } = req.params as { code: string };
       return;
     }
 
+    await incrementClickCount(code);
     res.redirect(302, longUrl);
   } catch (err) {
     console.error('REDIRECT ERROR:', JSON.stringify(err, Object.getOwnPropertyNames(err)));
